@@ -3,8 +3,20 @@ export const SITE_NAME = "work-catalog";
 export const SITE_DESCRIPTION =
   "品番・作品名・メーカー・レーベル・シリーズから探せる作品カタログ。公式クレジットの出演者情報と、廃盤・希少タイトルの中古相場をあわせて確認できます。";
 
+const FALLBACK_BASE_URL = "http://localhost:3000";
+
+// NEXT_PUBLIC_SITE_URLが未設定・不完全（例: "https://"のみ）だとnew URL()が例外を投げ、
+// ビルド全体が失敗する（layout.tsxのmetadataBase生成で顕在化した）。
+// 不正な値のときは静かにフォールバックし、ビルドを壊さないようにする。
 export function resolveBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const url = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!url) return FALLBACK_BASE_URL;
+  try {
+    new URL(url);
+    return url;
+  } catch {
+    return FALLBACK_BASE_URL;
+  }
 }
 
 export const NAV_LINKS = [
