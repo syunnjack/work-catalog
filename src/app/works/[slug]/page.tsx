@@ -6,6 +6,8 @@ import OfferCompareTable from "@/components/OfferCompareTable";
 import UsedMarketCompareTable from "@/components/UsedMarketCompareTable";
 import OfficialInfoNotice from "@/components/OfficialInfoNotice";
 import DisclosureNotice from "@/components/DisclosureNotice";
+import FavoriteButton from "@/components/FavoriteButton";
+import CommentSection from "@/components/CommentSection";
 import { getWorkBySlug } from "@/lib/data";
 import { breadcrumbJsonLd, buildWorkAnswerBlock, faqJsonLd, workJsonLd } from "@/lib/seo";
 import { resolveBaseUrl } from "@/lib/constants";
@@ -86,7 +88,10 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
           className="mt-3 w-full max-w-md rounded-lg border border-neutral-800"
         />
       )}
-      <h1 className="mt-3 text-xl font-bold text-white">{work.title}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">{work.title}</h1>
+        <FavoriteButton workId={work.id} />
+      </div>
       <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-sm sm:grid-cols-3">
@@ -169,6 +174,8 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
           ))}
         </dl>
       </section>
+
+      <CommentSection workId={work.id} />
 
       <DisclosureNotice />
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
 import SearchBox from "./SearchBox";
+import AuthNav from "./AuthNav";
 
 export default function AppHeader() {
   return (
@@ -22,6 +23,7 @@ export default function AppHeader() {
               {link.label}
             </Link>
           ))}
+          <AuthNav />
         </nav>
       </div>
     </header>
