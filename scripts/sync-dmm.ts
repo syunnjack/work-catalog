@@ -9,8 +9,7 @@
  *   例) npx tsx scripts/sync-dmm.ts "サンプルレーベル" 30
  *
  * 必要な環境変数（.env.local から読み込む）:
- *   DMM_API_ID, DMM_AFFILIATE_ID, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
- *   ※ NEXT_PUBLIC_SUPABASE_URL ではなく SUPABASE_URL（サーバー専用）を使う点に注意。
+ *   DMM_API_ID, DMM_AFFILIATE_ID, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
@@ -228,7 +227,9 @@ async function processItem(item: DmmItem, supabase: SupabaseClient, fanzaPlatfor
           offer_type: "purchase",
           intent_type: "ppv_primary",
           cta_priority: 10,
-          price_note: item.prices?.price ? `参考価格 ${item.prices.price}円〜` : null,
+          // DMMのprice文字列は既に"2180~"のように末尾へ「~」を含む場合があるため、
+          // 素朴に連結すると「2180~円〜」のような二重表記になる。末尾の~を落としてから整形する。
+          price_note: item.prices?.price ? `参考価格 ${item.prices.price.replace(/~$/, "")}円〜` : null,
           checked_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -257,7 +258,7 @@ async function main() {
 
   const apiId = requireEnv("DMM_API_ID");
   const affiliateId = requireEnv("DMM_AFFILIATE_ID");
-  const supabase = createClient(requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"), {
+  const supabase = createClient(requireEnv("NEXT_PUBLIC_SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false },
   });
 
