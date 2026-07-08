@@ -7,12 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync-dmm": "tsx scripts/sync-dmm.ts"
+    "sync-dmm": "tsx scripts/sync-dmm.ts",
+    "sync-duga": "tsx scripts/sync-duga.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.110.1",
     "clsx": "^2.1.1",
+    "iconv-lite": "^0.6.3",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
     "react": "19.2.4",

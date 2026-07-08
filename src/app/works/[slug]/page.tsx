@@ -7,6 +7,7 @@ import UsedMarketCompareTable from "@/components/UsedMarketCompareTable";
 import OfficialInfoNotice from "@/components/OfficialInfoNotice";
 import DisclosureNotice from "@/components/DisclosureNotice";
 import FavoriteButton from "@/components/FavoriteButton";
+import PriceWatchButton from "@/components/PriceWatchButton";
 import CommentSection from "@/components/CommentSection";
 import { getWorkBySlug } from "@/lib/data";
 import { breadcrumbJsonLd, buildWorkAnswerBlock, faqJsonLd, workJsonLd } from "@/lib/seo";
@@ -159,7 +160,12 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
 
       {work.marketPrices.length > 0 && (
         <section className="mt-6">
-          <UsedMarketCompareTable prices={work.marketPrices} rarityNotes={work.rarityNotes} />
+          <div className="flex justify-end">
+            <PriceWatchButton workId={work.id} />
+          </div>
+          <div className="mt-2">
+            <UsedMarketCompareTable prices={work.marketPrices} rarityNotes={work.rarityNotes} />
+          </div>
         </section>
       )}
 

@@ -36,3 +36,33 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(request: NextRequest) {
+  const userId = await getAuthenticatedUserId(request);
+  if (!userId) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+
+  const parsed = priceWatchSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "リクエストが不正です。" }, { status: 400 });
+  }
+
+  let supabase;
+  try {
+    supabase = getSupabaseServerClient();
+  } catch {
+    return NextResponse.json({ error: "サーバー側の設定不備によりリクエストを処理できません。" }, { status: 500 });
+  }
+
+  const { error } = await supabase
+    .from("price_watch_subscriptions")
+    .delete()
+    .eq("user_id", userId)
+    .eq("work_id", parsed.data.workId);
+
+  if (error) {
+    return NextResponse.json({ error: "価格通知の解除に失敗しました。" }, { status: 502 });
+  }
+  return NextResponse.json({ ok: true });
+}
