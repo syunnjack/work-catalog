@@ -5,8 +5,10 @@
  * それ以外の出典（推測・画像照合・ユーザー投稿）による出演者補完は行わない。
  *
  * 使い方:
- *   npx tsx scripts/sync-dmm.ts <キーワード> [取得件数(最大100, 既定20)]
+ *   npx tsx scripts/sync-dmm.ts <キーワード|"-"> [取得件数(既定20, 100件ごとに自動ページング)]
  *   例) npx tsx scripts/sync-dmm.ts "サンプルレーベル" 30
+ *   キーワードを "-" にすると絞り込み無し（新着順）で幅広く取得する。
+ *   例) npx tsx scripts/sync-dmm.ts - 300
  *
  * 必要な環境変数（.env.local から読み込む）:
  *   DMM_API_ID, DMM_AFFILIATE_ID, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -73,7 +75,13 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
   return results;
 }
 
-async function fetchDmmItems(apiId: string, affiliateId: string, keyword: string, hits: number): Promise<DmmItem[]> {
+async function fetchDmmItemsPage(
+  apiId: string,
+  affiliateId: string,
+  keyword: string | null,
+  hits: number,
+  offset: number
+): Promise<DmmItem[]> {
   const url = new URL(DMM_ITEM_LIST_URL);
   url.searchParams.set("api_id", apiId);
   url.searchParams.set("affiliate_id", affiliateId);
@@ -81,8 +89,9 @@ async function fetchDmmItems(apiId: string, affiliateId: string, keyword: string
   url.searchParams.set("service", "digital");
   url.searchParams.set("floor", "videoa");
   url.searchParams.set("hits", String(Math.min(hits, MAX_HITS_PER_REQUEST)));
+  url.searchParams.set("offset", String(offset));
   url.searchParams.set("sort", "date");
-  url.searchParams.set("keyword", keyword);
+  if (keyword) url.searchParams.set("keyword", keyword);
   url.searchParams.set("output", "json");
 
   const response = await fetch(url.toString());
@@ -92,6 +101,23 @@ async function fetchDmmItems(apiId: string, affiliateId: string, keyword: string
   }
   const json = (await response.json()) as DmmItemListResponse;
   return json.result?.items ?? [];
+}
+
+// 1リクエストあたり最大100件のため、目標件数に届くまでoffsetをずらして取得する。
+// DMM APIへの過度な連続アクセスを避けるため、ページ間に短い間隔を空ける。
+async function fetchDmmItems(apiId: string, affiliateId: string, keyword: string | null, totalWanted: number): Promise<DmmItem[]> {
+  const items: DmmItem[] = [];
+  let offset = 1; // DMM ItemList APIのoffsetは1始まり。
+  while (items.length < totalWanted) {
+    const pageSize = Math.min(MAX_HITS_PER_REQUEST, totalWanted - items.length);
+    const page = await fetchDmmItemsPage(apiId, affiliateId, keyword, pageSize, offset);
+    if (page.length === 0) break; // これ以上結果が無い。
+    items.push(...page);
+    offset += page.length;
+    if (page.length < pageSize) break; // 最終ページ。
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  return items;
 }
 
 // DMM側の数値IDをそのままslugにする（日本語名のスラグ化による衝突・表記ゆれを避けるため）。
@@ -248,12 +274,13 @@ async function processItem(item: DmmItem, supabase: SupabaseClient, fanzaPlatfor
 }
 
 async function main() {
-  const [keyword, hitsArg] = process.argv.slice(2);
-  if (!keyword) {
-    console.error('使い方: npx tsx scripts/sync-dmm.ts "<キーワード>" [取得件数(既定20, 最大100)]');
+  const [keywordArg, hitsArg] = process.argv.slice(2);
+  if (!keywordArg) {
+    console.error('使い方: npx tsx scripts/sync-dmm.ts "<キーワード>|-" [取得件数(既定20)]');
     process.exitCode = 1;
     return;
   }
+  const keyword = keywordArg === "-" ? null : keywordArg;
   const hits = hitsArg ? Number.parseInt(hitsArg, 10) : 20;
 
   const apiId = requireEnv("DMM_API_ID");
@@ -262,7 +289,7 @@ async function main() {
     auth: { persistSession: false },
   });
 
-  console.log(`[sync-dmm] キーワード="${keyword}" で最大${hits}件を取得します`);
+  console.log(`[sync-dmm] キーワード="${keyword ?? "(絞り込みなし・新着順)"}" で最大${hits}件を取得します`);
   const items = await fetchDmmItems(apiId, affiliateId, keyword, hits);
   console.log(`[sync-dmm] ${items.length}件の候補を取得しました`);
 
