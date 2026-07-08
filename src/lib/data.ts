@@ -48,6 +48,55 @@ export async function getMakers(): Promise<Maker[]> {
   );
 }
 
+export interface MakerWorkCount {
+  maker: Maker;
+  workCount: number;
+}
+
+// topics(コラム/ランキング)向け。makersテーブルにwork countを持たないため、works側から集計する。
+export async function getMakerWorkCounts(limit = 20): Promise<MakerWorkCount[]> {
+  return withFallback(
+    async (supabase) => {
+      const [{ data: makers }, { data: works }] = await Promise.all([
+        supabase.from("makers").select("*"),
+        supabase.from("works").select("maker_id"),
+      ]);
+      const counts = new Map<string, number>();
+      for (const work of (works ?? []) as Array<{ maker_id: string | null }>) {
+        if (!work.maker_id) continue;
+        counts.set(work.maker_id, (counts.get(work.maker_id) ?? 0) + 1);
+      }
+      return ((makers ?? []) as Maker[])
+        .map((maker) => ({ maker, workCount: counts.get(maker.id) ?? 0 }))
+        .sort((a, b) => b.workCount - a.workCount)
+        .slice(0, limit);
+    },
+    () => {
+      const counts = new Map<string, number>();
+      for (const work of mock.mockWorks) {
+        if (!work.maker_id) continue;
+        counts.set(work.maker_id, (counts.get(work.maker_id) ?? 0) + 1);
+      }
+      return mock.mockMakers
+        .map((maker) => ({ maker, workCount: counts.get(maker.id) ?? 0 }))
+        .sort((a, b) => b.workCount - a.workCount)
+        .slice(0, limit);
+    }
+  );
+}
+
+// topics(コラム)の「変な名前選手権」向け。名前で複数件まとめて引く。
+export async function getMakersByNames(names: string[]): Promise<Maker[]> {
+  return withFallback(
+    async (supabase) => {
+      const { data, error } = await supabase.from("makers").select("*").in("name", names);
+      if (error) throw error;
+      return (data ?? []) as Maker[];
+    },
+    () => mock.mockMakers.filter((m) => names.includes(m.name))
+  );
+}
+
 export async function getMakerBySlug(slug: string): Promise<Maker | null> {
   return withFallback(
     async (supabase) => {

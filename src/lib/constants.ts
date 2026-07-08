@@ -29,6 +29,7 @@ export const NAV_LINKS = [
   { href: "/platforms", label: "配信サイト" },
   { href: "/used-market", label: "中古相場" },
   { href: "/ranking", label: "ランキング" },
+  { href: "/topics", label: "コラム" },
 ] as const;
 
 export const AGE_GATE_NOTICE =

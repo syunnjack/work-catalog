@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { resolveBaseUrl } from "@/lib/constants";
 import { getActresses, getGenres, getLabels, getMakers, getSeriesList, getWorks } from "@/lib/data";
+import { TOPICS } from "@/lib/topics-content";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = resolveBaseUrl();
@@ -25,7 +26,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/ranking`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/used-market`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/used-market/ranking`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/topics`, changeFrequency: "weekly", priority: 0.6 },
   ];
+
+  for (const topic of TOPICS) entries.push({ url: `${baseUrl}/topics/${topic.slug}`, changeFrequency: "weekly", priority: 0.6 });
 
   for (const work of works) entries.push({ url: `${baseUrl}/works/${work.slug}`, changeFrequency: "weekly", priority: 0.8 });
   for (const actress of actresses) entries.push({ url: `${baseUrl}/actresses/${actress.slug}`, changeFrequency: "weekly", priority: 0.6 });
