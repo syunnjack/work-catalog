@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
+import AgeGate from "@/components/AgeGate";
 import { AGE_GATE_NOTICE, resolveBaseUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja" className="h-full">
       <body className="flex min-h-full flex-col bg-neutral-950 text-neutral-100 antialiased">
+        <AgeGate />
         <div className="border-b border-neutral-900 bg-neutral-900/60 px-4 py-1.5 text-center text-[11px] text-neutral-400">
           {AGE_GATE_NOTICE}
         </div>
