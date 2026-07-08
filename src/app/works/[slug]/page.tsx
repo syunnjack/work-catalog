@@ -78,6 +78,14 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
         ]}
       />
 
+      {work.permitted_thumbnail_url && (
+        // eslint-disable-next-line @next/next/no-img-element -- 許諾済み外部画像(DMM等)をそのまま表示する
+        <img
+          src={work.permitted_thumbnail_url}
+          alt={work.title}
+          className="mt-3 w-full max-w-md rounded-lg border border-neutral-800"
+        />
+      )}
       <h1 className="mt-3 text-xl font-bold text-white">{work.title}</h1>
       <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
 
