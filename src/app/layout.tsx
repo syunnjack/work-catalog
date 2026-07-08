@@ -4,10 +4,19 @@ import AppHeader from "@/components/AppHeader";
 import AgeGate from "@/components/AgeGate";
 import { AGE_GATE_NOTICE, resolveBaseUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 
+const HOME_TITLE = `${SITE_NAME}｜品番・作品名・メーカー・レーベルから探す作品カタログ`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(resolveBaseUrl()),
-  title: `${SITE_NAME}｜品番・作品名・メーカー・レーベルから探す作品カタログ`,
+  title: HOME_TITLE,
   description: SITE_DESCRIPTION,
+  openGraph: {
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    url: resolveBaseUrl(),
+    locale: "ja_JP",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
