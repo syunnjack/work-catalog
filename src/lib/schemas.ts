@@ -33,6 +33,17 @@ export const priceWatchSchema = z.object({
   notifyBelowPriceYen: z.number().positive().optional(),
 });
 
+// 新作発売日通知(第一の核の再訪問導線)。メーカー/レーベル/シリーズのいずれか1つだけを指定する。
+export const notificationSubscriptionSchema = z
+  .object({
+    makerId: z.string().min(1).optional(),
+    labelId: z.string().min(1).optional(),
+    seriesId: z.string().min(1).optional(),
+  })
+  .refine((data) => [data.makerId, data.labelId, data.seriesId].filter(Boolean).length === 1, {
+    message: "makerId, labelId, seriesIdのいずれか1つだけを指定してください。",
+  });
+
 // /admin(メーカー提出情報レビュー画面)での審査結果。ここではmaker_submissions.statusの
 // 更新のみを扱う。承認内容をworks/work_actress/aliasesへ反映する作業は運営者が別途手動で行う
 // (docs/architecture.md「メーカー公式提出チャネル」参照)。

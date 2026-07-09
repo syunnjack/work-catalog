@@ -215,6 +215,16 @@ export interface MakerSubmission {
   created_at: string;
 }
 
+// 新作発売日通知の登録。メーカー/レーベル/シリーズのいずれか1つにのみ紐づく。
+export interface NotificationSubscription {
+  id: string;
+  user_id: string;
+  maker_id: string | null;
+  label_id: string | null;
+  series_id: string | null;
+  created_at: string;
+}
+
 // 画面表示用に関連エンティティを合成した型。
 export interface WorkWithRelations extends Work {
   maker: Maker | null;

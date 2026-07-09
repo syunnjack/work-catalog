@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WorkCard from "@/components/WorkCard";
+import NotifyButton from "@/components/NotifyButton";
 import { getLabelBySlug, getMakers, getSeriesList, getWorksByLabel } from "@/lib/data";
 import { buildMetadata } from "@/lib/seo";
 
@@ -36,7 +37,10 @@ export default async function LabelDetailPage({ params }: { params: Promise<{ sl
           { name: label.name, href: `/labels/${label.slug}` },
         ]}
       />
-      <h1 className="mt-3 text-xl font-bold text-white">{label.name}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">{label.name}</h1>
+        <NotifyButton labelId={label.id} />
+      </div>
       {maker && (
         <p className="mt-1 text-sm text-neutral-400">
           メーカー: <Link href={`/makers/${maker.slug}`} className="text-neutral-100 hover:underline">{maker.name}</Link>

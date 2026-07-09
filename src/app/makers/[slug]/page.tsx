@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WorkCard from "@/components/WorkCard";
+import NotifyButton from "@/components/NotifyButton";
 import { getLabelsByMaker, getMakerBySlug, getWorksByMaker } from "@/lib/data";
 import { buildMetadata } from "@/lib/seo";
 
@@ -28,7 +29,10 @@ export default async function MakerDetailPage({ params }: { params: Promise<{ sl
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "メーカー一覧", href: "/makers" }, { name: maker.name, href: `/makers/${maker.slug}` }]} />
-      <h1 className="mt-3 text-xl font-bold text-white">{maker.name}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">{maker.name}</h1>
+        <NotifyButton makerId={maker.id} />
+      </div>
       {maker.description && <p className="mt-2 text-sm text-neutral-400">{maker.description}</p>}
 
       {labels.length > 0 && (

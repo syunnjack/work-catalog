@@ -305,6 +305,26 @@ create table public.price_watch_subscriptions (
   unique (user_id, work_id)
 );
 
+-- 新作発売日通知(第一の核の再訪問導線)。メーカー/レーベル/シリーズのいずれか1つに対する
+-- 「新作が出たら通知してほしい」という登録のみを扱う(price_watch_subscriptionsと同じパターン)。
+create table public.notification_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  maker_id uuid references public.makers(id) on delete cascade,
+  label_id uuid references public.labels(id) on delete cascade,
+  series_id uuid references public.series(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  constraint notification_subscriptions_single_target check (
+    (case when maker_id is not null then 1 else 0 end)
+    + (case when label_id is not null then 1 else 0 end)
+    + (case when series_id is not null then 1 else 0 end) = 1
+  )
+);
+
+create unique index notification_subscriptions_user_maker_idx on public.notification_subscriptions (user_id, maker_id) where maker_id is not null;
+create unique index notification_subscriptions_user_label_idx on public.notification_subscriptions (user_id, label_id) where label_id is not null;
+create unique index notification_subscriptions_user_series_idx on public.notification_subscriptions (user_id, series_id) where series_id is not null;
+
 -- メーカー/レーベルからの公式な情報提出・修正依頼。第三者による特定ではなく、
 -- 権利者本人からの公式情報提供のみを受け付ける窓口。承認されるまで一切公開しない。
 create table public.maker_submissions (
@@ -396,6 +416,7 @@ alter table public.favorites enable row level security;
 alter table public.comments enable row level security;
 alter table public.maker_submissions enable row level security;
 alter table public.price_watch_subscriptions enable row level security;
+alter table public.notification_subscriptions enable row level security;
 alter table public.data_partners enable row level security;
 alter table public.data_partner_api_keys enable row level security;
 alter table public.data_partner_api_usage_logs enable row level security;
@@ -408,6 +429,9 @@ create policy "delete own favorites" on public.favorites for delete using (auth.
 create policy "read own price watches" on public.price_watch_subscriptions for select using (auth.uid() = user_id);
 create policy "insert own price watches" on public.price_watch_subscriptions for insert with check (auth.uid() = user_id);
 create policy "delete own price watches" on public.price_watch_subscriptions for delete using (auth.uid() = user_id);
+create policy "read own notification subscriptions" on public.notification_subscriptions for select using (auth.uid() = user_id);
+create policy "insert own notification subscriptions" on public.notification_subscriptions for insert with check (auth.uid() = user_id);
+create policy "delete own notification subscriptions" on public.notification_subscriptions for delete using (auth.uid() = user_id);
 -- maker_submissions、data_partners、data_partner_api_keys、data_partner_api_usage_logsは
 -- いずれもadmin(service role)経由のみで読み書きする想定のため、クライアント向けのポリシーは
 -- あえて設けない（担当者確認済みの審査フローを経てのみ、サーバー側から操作する）。
