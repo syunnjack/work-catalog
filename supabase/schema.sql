@@ -4,8 +4,30 @@ create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   avatar_url text,
+  -- お気に入りリストの公開共有(UGC施策)。favorites_share_tokenは推測されにくいURLの手がかりとして
+  -- 使う(連番のuser_idをそのまま公開URLにしない)。無効化・再発行してもレコードは残す。
+  favorites_public boolean not null default false,
+  favorites_share_token uuid not null default gen_random_uuid(),
   created_at timestamptz not null default now()
 );
+
+-- auth.users(Supabase Auth)へのサインアップ時にpublic.usersへも行を作る。
+-- これが無いと、favorites/comments/price_watch_subscriptions/work_ratings/point_transactions等
+-- public.users(id)を参照する全テーブルへのINSERTが外部キー違反になる。
+create function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.users (id) values (new.id) on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_auth_user();
 
 create table public.makers (
   id uuid primary key default gen_random_uuid(),
@@ -89,6 +111,8 @@ create table public.works (
   seo_description text,
   favorite_count integer not null default 0,
   view_count integer not null default 0,
+  rating_avg numeric(3, 2),
+  rating_count integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -284,7 +308,7 @@ create table public.work_market_prices (
   id uuid primary key default gen_random_uuid(),
   work_id uuid not null references public.works(id) on delete cascade,
   platform_id uuid not null references public.used_market_platforms(id) on delete cascade,
-  price_type text not null check (price_type in ('current_listing_min', 'current_listing_avg', 'completed_sale_avg', 'completed_sale_max')),
+  price_type text not null check (price_type in ('current_listing_min', 'current_listing_avg', 'completed_sale_avg', 'completed_sale_max', 'user_reported')),
   price_yen numeric(10, 0) not null,
   sample_size integer,
   observed_at timestamptz not null default now(),
@@ -312,6 +336,27 @@ create table public.price_watch_subscriptions (
   unique (user_id, work_id)
 );
 
+-- 作品の星評価(1〜5、1ユーザー1作品につき1件)。works.rating_avg/rating_countは
+-- トリガーを持たないため、評価の登録/更新の都度アプリ側で再集計して更新する。
+create table public.work_ratings (
+  work_id uuid not null references public.works(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
+  rating smallint not null check (rating between 1 and 5),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (work_id, user_id)
+);
+
+-- コメントへのいいね。1ユーザー1コメントにつき1回まで。comments.like_countは
+-- トリガーを持たないため、いいねの追加/削除時にアプリ側で実カウントを取り直して更新する
+-- (dmm-sync/duga-syncのactresses.works_count更新と同じパターン)。
+create table public.comment_likes (
+  comment_id uuid not null references public.comments(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+
 -- ユーザーポイント(将来の会員特典の下地)。加算専用の台帳(ledger)として持ち、残高は
 -- SUM(points)で都度算出する(整合性の取りにくい可変残高カラムは持たない)。
 -- 現時点でポイントの交換先・使い道は未定。将来の有料会員特典(広告非表示等)の判断材料として、
@@ -320,7 +365,7 @@ create table public.point_transactions (
   id bigint generated always as identity primary key,
   user_id uuid not null references public.users(id) on delete cascade,
   points integer not null,
-  reason text not null check (reason in ('favorite_added', 'comment_posted', 'price_watch_registered', 'notification_registered')),
+  reason text not null check (reason in ('favorite_added', 'comment_posted', 'price_watch_registered', 'notification_registered', 'comment_liked', 'work_rated', 'market_price_reported')),
   reference_id uuid,
   created_at timestamptz not null default now()
 );
@@ -344,6 +389,23 @@ create table public.notification_subscriptions (
 create unique index notification_subscriptions_user_maker_idx on public.notification_subscriptions (user_id, maker_id) where maker_id is not null;
 create unique index notification_subscriptions_user_label_idx on public.notification_subscriptions (user_id, label_id) where label_id is not null;
 create unique index notification_subscriptions_user_series_idx on public.notification_subscriptions (user_id, series_id) where series_id is not null;
+
+-- ユーザーからの中古相場報告(「この値段で買えた/売れた」)。work_market_prices(公式相場情報)とは
+-- 別テーブルにし、運営者が確認してapprovedにするまでは相場として表示しない
+-- (docs/used-market-pricing.md「運用ルール」に沿い、未確認の投稿をそのまま公開しない)。
+create table public.work_market_price_reports (
+  id uuid primary key default gen_random_uuid(),
+  work_id uuid not null references public.works(id) on delete cascade,
+  platform_id uuid not null references public.used_market_platforms(id) on delete cascade,
+  user_id uuid references public.users(id) on delete set null,
+  price_yen numeric(10, 0) not null check (price_yen > 0),
+  note text,
+  source_url text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reviewed_at timestamptz,
+  review_note text,
+  created_at timestamptz not null default now()
+);
 
 -- メーカー/レーベルからの公式な情報提出・修正依頼。第三者による特定ではなく、
 -- 権利者本人からの公式情報提供のみを受け付ける窓口。承認されるまで一切公開しない。
@@ -438,10 +500,14 @@ alter table public.maker_submissions enable row level security;
 alter table public.price_watch_subscriptions enable row level security;
 alter table public.notification_subscriptions enable row level security;
 alter table public.point_transactions enable row level security;
+alter table public.comment_likes enable row level security;
+alter table public.work_ratings enable row level security;
+alter table public.work_market_price_reports enable row level security;
 alter table public.data_partners enable row level security;
 alter table public.data_partner_api_keys enable row level security;
 alter table public.data_partner_api_usage_logs enable row level security;
 
+create policy "read own user profile" on public.users for select using (auth.uid() = id);
 create policy "public read comments" on public.comments for select using (status = 'visible');
 create policy "insert own or anonymous comments" on public.comments for insert with check (true);
 create policy "read own favorites" on public.favorites for select using (auth.uid() = user_id);
@@ -456,9 +522,15 @@ create policy "delete own notification subscriptions" on public.notification_sub
 -- point_transactionsへの書き込みはservice role(サーバー側のawardPoints経由)のみを想定し、
 -- クライアント向けのinsert/deleteポリシーはあえて設けない(自己申告での不正加算を防ぐ)。
 create policy "read own point transactions" on public.point_transactions for select using (auth.uid() = user_id);
--- maker_submissions、data_partners、data_partner_api_keys、data_partner_api_usage_logsは
--- いずれもadmin(service role)経由のみで読み書きする想定のため、クライアント向けのポリシーは
--- あえて設けない（担当者確認済みの審査フローを経てのみ、サーバー側から操作する）。
+create policy "read own comment likes" on public.comment_likes for select using (auth.uid() = user_id);
+create policy "insert own comment likes" on public.comment_likes for insert with check (auth.uid() = user_id);
+create policy "delete own comment likes" on public.comment_likes for delete using (auth.uid() = user_id);
+create policy "read own work rating" on public.work_ratings for select using (auth.uid() = user_id);
+create policy "insert own work rating" on public.work_ratings for insert with check (auth.uid() = user_id);
+create policy "update own work rating" on public.work_ratings for update using (auth.uid() = user_id);
+-- maker_submissions、work_market_price_reports、data_partners、data_partner_api_keys、
+-- data_partner_api_usage_logsはいずれもadmin(service role)経由のみで読み書きする想定のため、
+-- クライアント向けのポリシーはあえて設けない（担当者確認済みの審査フローを経てのみ、サーバー側から操作する）。
 
 insert into public.distribution_platforms
   (slug, name, operator_name, platform_type, website_url, country_code, priority, legal_review_status, notes)

@@ -8,8 +8,10 @@ import OfficialInfoNotice from "@/components/OfficialInfoNotice";
 import DisclosureNotice from "@/components/DisclosureNotice";
 import FavoriteButton from "@/components/FavoriteButton";
 import PriceWatchButton from "@/components/PriceWatchButton";
+import StarRating from "@/components/StarRating";
+import MarketPriceReportForm from "@/components/MarketPriceReportForm";
 import CommentSection from "@/components/CommentSection";
-import { getWorkBySlug } from "@/lib/data";
+import { getUsedMarketPlatforms, getWorkBySlug } from "@/lib/data";
 import { breadcrumbJsonLd, buildWorkAnswerBlock, faqJsonLd, workJsonLd } from "@/lib/seo";
 import { resolveBaseUrl } from "@/lib/constants";
 
@@ -44,6 +46,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const work = await getWorkBySlug(slug);
   if (!work) notFound();
+  const usedMarketPlatforms = await getUsedMarketPlatforms();
 
   const baseUrl = resolveBaseUrl();
   const pageUrl = `${baseUrl}/works/${work.slug}`;
@@ -94,6 +97,10 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
         <FavoriteButton workId={work.id} />
       </div>
       <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
+
+      <div className="mt-3">
+        <StarRating workId={work.id} ratingAvg={work.rating_avg} ratingCount={work.rating_count} />
+      </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-sm sm:grid-cols-3">
         <div>
@@ -158,16 +165,19 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
         <OfferCompareTable links={work.distributionLinks} />
       </section>
 
-      {work.marketPrices.length > 0 && (
-        <section className="mt-6">
-          <div className="flex justify-end">
-            <PriceWatchButton workId={work.id} />
-          </div>
-          <div className="mt-2">
-            <UsedMarketCompareTable prices={work.marketPrices} rarityNotes={work.rarityNotes} />
-          </div>
-        </section>
-      )}
+      <section className="mt-6">
+        {work.marketPrices.length > 0 && (
+          <>
+            <div className="flex justify-end">
+              <PriceWatchButton workId={work.id} />
+            </div>
+            <div className="mt-2">
+              <UsedMarketCompareTable prices={work.marketPrices} rarityNotes={work.rarityNotes} />
+            </div>
+          </>
+        )}
+        <MarketPriceReportForm workId={work.id} platforms={usedMarketPlatforms} />
+      </section>
 
       <section className="mt-10">
         <h2 className="text-base font-bold text-neutral-100">よくある質問</h2>

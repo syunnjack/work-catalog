@@ -83,6 +83,17 @@ export interface Work {
   seo_description: string | null;
   favorite_count: number;
   view_count: number;
+  rating_avg: number | null;
+  rating_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// 作品の星評価(1〜5)。1ユーザー1作品につき1件。
+export interface WorkRating {
+  work_id: string;
+  user_id: string;
+  rating: number;
   created_at: string;
   updated_at: string;
 }
@@ -167,7 +178,8 @@ export type MarketPriceType =
   | "current_listing_min"
   | "current_listing_avg"
   | "completed_sale_avg"
-  | "completed_sale_max";
+  | "completed_sale_max"
+  | "user_reported";
 
 export interface WorkMarketPrice {
   id: string;
@@ -179,6 +191,21 @@ export interface WorkMarketPrice {
   observed_at: string;
   source_url: string | null;
   affiliate_link_id: string | null;
+  created_at: string;
+}
+
+// ユーザーからの中古相場報告。運営者がapprovedにするまではwork_market_pricesへ反映しない。
+export interface WorkMarketPriceReport {
+  id: string;
+  work_id: string;
+  platform_id: string;
+  user_id: string | null;
+  price_yen: number;
+  note: string | null;
+  source_url: string | null;
+  status: "pending" | "approved" | "rejected";
+  reviewed_at: string | null;
+  review_note: string | null;
   created_at: string;
 }
 
@@ -220,7 +247,14 @@ export interface PointTransaction {
   id: number;
   user_id: string;
   points: number;
-  reason: "favorite_added" | "comment_posted" | "price_watch_registered" | "notification_registered";
+  reason:
+    | "favorite_added"
+    | "comment_posted"
+    | "price_watch_registered"
+    | "notification_registered"
+    | "comment_liked"
+    | "work_rated"
+    | "market_price_reported";
   reference_id: string | null;
   created_at: string;
 }

@@ -33,6 +33,32 @@ export const priceWatchSchema = z.object({
   notifyBelowPriceYen: z.number().positive().optional(),
 });
 
+// 作品の星評価(1〜5)。
+export const workRatingSchema = z.object({
+  workId: z.string().min(1),
+  rating: z.number().int().min(1).max(5),
+});
+
+// ユーザーからの中古相場報告。運営者が確認してapprovedにするまでは相場として表示しない。
+export const marketPriceReportSchema = z.object({
+  workId: z.string().min(1),
+  platformId: z.string().min(1),
+  priceYen: z.number().positive(),
+  note: z.string().max(500).optional(),
+  sourceUrl: z.string().url().optional(),
+});
+
+// /admin(中古相場報告レビュー画面)での審査結果。
+export const marketPriceReportReviewSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  reviewNote: z.string().max(1000).optional(),
+});
+
+// お気に入りリストの公開共有設定。
+export const favoritesSharingSchema = z.object({
+  action: z.enum(["enable", "disable", "regenerate"]),
+});
+
 // 新作発売日通知(第一の核の再訪問導線)。メーカー/レーベル/シリーズのいずれか1つだけを指定する。
 export const notificationSubscriptionSchema = z
   .object({

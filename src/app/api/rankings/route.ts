@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWorkRanking, type WorkRankingMetric } from "@/lib/data";
 
-const METRICS: WorkRankingMetric[] = ["views", "clicks", "ctr"];
+const METRICS: WorkRankingMetric[] = ["views", "clicks", "ctr", "rating"];
 
 // 作品・メーカー・レーベル単位のランキングのみを扱う。女優個人の人気ランキングは設けない
 // （docs/architecture.md「4. API一覧」参照）。makers/labels/series単位の集計は今後追加予定。

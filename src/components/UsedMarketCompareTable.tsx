@@ -5,6 +5,7 @@ const PRICE_TYPE_LABEL: Record<WorkMarketPrice["price_type"], string> = {
   current_listing_avg: "現在の出品平均",
   completed_sale_avg: "直近の成約平均",
   completed_sale_max: "直近の成約最高値",
+  user_reported: "ユーザー報告",
 };
 
 const RARITY_LABEL: Record<WorkRarityNote["rarity_reason"], string> = {

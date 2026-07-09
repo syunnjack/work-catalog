@@ -13,6 +13,7 @@ const METRIC_TABS: Array<{ value: WorkRankingMetric; label: string; description:
   { value: "views", label: "閲覧数順", description: "閲覧数の多い順に並べています。" },
   { value: "clicks", label: "クリック数順", description: "配信/販売先へのクリック数が多い順に並べています。" },
   { value: "ctr", label: "CTR順", description: "閲覧数に対するクリック率が高い順に並べています。" },
+  { value: "rating", label: "評価順", description: "ユーザー評価の平均が高い順に並べています(評価が1件以上ある作品のみ)。" },
 ];
 
 export default async function RankingPage({ searchParams }: { searchParams: Promise<{ metric?: string }> }) {

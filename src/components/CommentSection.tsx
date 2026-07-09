@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 interface Comment {
   id: string;
@@ -12,8 +14,11 @@ interface Comment {
 }
 
 export default function CommentSection({ workId }: { workId: string }) {
+  const router = useRouter();
   const { session } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [likeBusyId, setLikeBusyId] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [anonymousName, setAnonymousName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,6 +31,49 @@ export default function CommentSection({ workId }: { workId: string }) {
   }
 
   useEffect(load, [workId]);
+
+  useEffect(() => {
+    if (!session) {
+      setLikedIds(new Set());
+      return;
+    }
+    let supabase;
+    try {
+      supabase = getSupabaseBrowserClient();
+    } catch {
+      return;
+    }
+    supabase
+      .from("comment_likes")
+      .select("comment_id")
+      .eq("user_id", session.user.id)
+      .then(({ data }) => setLikedIds(new Set((data ?? []).map((row: { comment_id: string }) => row.comment_id))));
+  }, [session, comments]);
+
+  async function toggleLike(commentId: string) {
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    setLikeBusyId(commentId);
+    const liked = likedIds.has(commentId);
+    const res = await fetch(`/api/comments/${commentId}/like`, {
+      method: liked ? "DELETE" : "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    setLikeBusyId(null);
+    if (res.ok) {
+      setLikedIds((prev) => {
+        const next = new Set(prev);
+        if (liked) next.delete(commentId);
+        else next.add(commentId);
+        return next;
+      });
+      setComments((prev) =>
+        prev.map((c) => (c.id === commentId ? { ...c, like_count: c.like_count + (liked ? -1 : 1) } : c))
+      );
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -84,14 +132,30 @@ export default function CommentSection({ workId }: { workId: string }) {
       </form>
 
       <ul className="mt-4 divide-y divide-neutral-800">
-        {comments.map((comment) => (
-          <li key={comment.id} className="py-3 text-sm">
-            <p className="text-neutral-200">{comment.body}</p>
-            <p className="mt-1 text-xs text-neutral-500">
-              {comment.anonymous_name ?? "登録ユーザー"} ・ {new Date(comment.created_at).toLocaleDateString("ja-JP")}
-            </p>
-          </li>
-        ))}
+        {comments.map((comment) => {
+          const liked = likedIds.has(comment.id);
+          return (
+            <li key={comment.id} className="py-3 text-sm">
+              <p className="text-neutral-200">{comment.body}</p>
+              <div className="mt-1 flex items-center justify-between">
+                <p className="text-xs text-neutral-500">
+                  {comment.anonymous_name ?? "登録ユーザー"} ・ {new Date(comment.created_at).toLocaleDateString("ja-JP")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => toggleLike(comment.id)}
+                  disabled={likeBusyId === comment.id}
+                  aria-pressed={liked}
+                  className={`rounded-full border px-2 py-0.5 text-xs transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    liked ? "border-rose-500 bg-rose-500/10 text-rose-300" : "border-neutral-700 text-neutral-400 hover:border-neutral-400"
+                  }`}
+                >
+                  {liked ? "♥" : "♡"} {comment.like_count}
+                </button>
+              </div>
+            </li>
+          );
+        })}
         {comments.length === 0 && <p className="py-3 text-xs text-neutral-500">まだコメントはありません。</p>}
       </ul>
     </section>

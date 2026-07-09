@@ -7,6 +7,9 @@ export const POINT_VALUES = {
   comment_posted: 2,
   price_watch_registered: 1,
   notification_registered: 1,
+  comment_liked: 1,
+  work_rated: 1,
+  market_price_reported: 2,
 } as const;
 
 export type PointReason = keyof typeof POINT_VALUES;

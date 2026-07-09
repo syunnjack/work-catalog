@@ -544,9 +544,44 @@ export async function getWorkRankingByCategory(category: GenreCategory, limit = 
   );
 }
 
+// ---- お気に入りリストの公開共有(UGC施策) ----
+
+export async function getPublicFavoritesByToken(token: string): Promise<Work[] | null> {
+  return withFallback(
+    async (supabase) => {
+      const { data: user } = await supabase
+        .from("users")
+        .select("id")
+        .eq("favorites_share_token", token)
+        .eq("favorites_public", true)
+        .maybeSingle();
+      if (!user) return null;
+
+      const { data, error } = await supabase.from("favorites").select("work_id, works(*)").eq("user_id", user.id);
+      if (error) throw error;
+      type Row = { works: Work | null };
+      return ((data ?? []) as unknown as Row[]).map((row) => row.works).filter((w): w is Work => Boolean(w));
+    },
+    () => null
+  );
+}
+
+// ---- 中古市場プラットフォーム(第二の核) ----
+
+export async function getUsedMarketPlatforms(): Promise<UsedMarketPlatform[]> {
+  return withFallback(
+    async (supabase) => {
+      const { data, error } = await supabase.from("used_market_platforms").select("*").eq("status", "active").order("name");
+      if (error) throw error;
+      return (data ?? []) as UsedMarketPlatform[];
+    },
+    () => mock.mockUsedMarketPlatforms
+  );
+}
+
 // ---- ランキング(作品・メーカー・レーベル単位。女優個人の人気ランキングは設けない) ----
 
-export type WorkRankingMetric = "views" | "clicks" | "ctr";
+export type WorkRankingMetric = "views" | "clicks" | "ctr" | "rating";
 
 // /go/[id]がwork_distribution_link_id基準で記録したクリックログをwork単位に集計する。
 // 実際のクリック数はまだ少量の想定のため、DB側の集計関数は用意せずアプリ側で集計する。
@@ -572,6 +607,19 @@ export async function getWorkRanking(limit = 20, metric: WorkRankingMetric = "vi
     async (supabase) => {
       if (metric === "views") {
         const { data, error } = await supabase.from("works").select("*").order("view_count", { ascending: false }).limit(limit);
+        if (error) throw error;
+        return (data ?? []) as Work[];
+      }
+
+      if (metric === "rating") {
+        // rating_count>=1のみ対象。評価件数がまだ少ないため、1件のみの評価が上位を占めることがある点は
+        // 今後評価が蓄積してから最低件数のしきい値を検討する。
+        const { data, error } = await supabase
+          .from("works")
+          .select("*")
+          .gt("rating_count", 0)
+          .order("rating_avg", { ascending: false })
+          .limit(limit);
         if (error) throw error;
         return (data ?? []) as Work[];
       }
