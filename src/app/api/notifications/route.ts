@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { getAuthenticatedUserId } from "@/lib/auth";
 import { notificationSubscriptionSchema } from "@/lib/schemas";
+import { awardPoints } from "@/lib/points";
 
 // 新作発売日通知(第一の核)の登録。メーカー/レーベル/シリーズページの再訪問導線として使う。
 export async function POST(request: NextRequest) {
@@ -42,9 +43,12 @@ export async function POST(request: NextRequest) {
     series_id: parsed.data.seriesId ?? null,
   });
 
-  // 23505 = unique_violation。並行リクエストで既に登録済みだった場合は成功扱いにする。
+  // 23505 = unique_violation。並行リクエストで既に登録済みだった場合は成功扱いにする(ポイントは付与しない)。
   if (error && error.code !== "23505") {
     return NextResponse.json({ error: "通知の登録に失敗しました。" }, { status: 502 });
+  }
+  if (!error) {
+    await awardPoints(supabase, userId, "notification_registered", parsed.data.makerId ?? parsed.data.labelId ?? parsed.data.seriesId);
   }
   return NextResponse.json({ ok: true });
 }

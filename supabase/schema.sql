@@ -312,6 +312,19 @@ create table public.price_watch_subscriptions (
   unique (user_id, work_id)
 );
 
+-- ユーザーポイント(将来の会員特典の下地)。加算専用の台帳(ledger)として持ち、残高は
+-- SUM(points)で都度算出する(整合性の取りにくい可変残高カラムは持たない)。
+-- 現時点でポイントの交換先・使い道は未定。将来の有料会員特典(広告非表示等)の判断材料として、
+-- どの行動がどれだけエンゲージメントを生むかを見るためだけに記録する。
+create table public.point_transactions (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.users(id) on delete cascade,
+  points integer not null,
+  reason text not null check (reason in ('favorite_added', 'comment_posted', 'price_watch_registered', 'notification_registered')),
+  reference_id uuid,
+  created_at timestamptz not null default now()
+);
+
 -- 新作発売日通知(第一の核の再訪問導線)。メーカー/レーベル/シリーズのいずれか1つに対する
 -- 「新作が出たら通知してほしい」という登録のみを扱う(price_watch_subscriptionsと同じパターン)。
 create table public.notification_subscriptions (
@@ -424,6 +437,7 @@ alter table public.comments enable row level security;
 alter table public.maker_submissions enable row level security;
 alter table public.price_watch_subscriptions enable row level security;
 alter table public.notification_subscriptions enable row level security;
+alter table public.point_transactions enable row level security;
 alter table public.data_partners enable row level security;
 alter table public.data_partner_api_keys enable row level security;
 alter table public.data_partner_api_usage_logs enable row level security;
@@ -439,6 +453,9 @@ create policy "delete own price watches" on public.price_watch_subscriptions for
 create policy "read own notification subscriptions" on public.notification_subscriptions for select using (auth.uid() = user_id);
 create policy "insert own notification subscriptions" on public.notification_subscriptions for insert with check (auth.uid() = user_id);
 create policy "delete own notification subscriptions" on public.notification_subscriptions for delete using (auth.uid() = user_id);
+-- point_transactionsへの書き込みはservice role(サーバー側のawardPoints経由)のみを想定し、
+-- クライアント向けのinsert/deleteポリシーはあえて設けない(自己申告での不正加算を防ぐ)。
+create policy "read own point transactions" on public.point_transactions for select using (auth.uid() = user_id);
 -- maker_submissions、data_partners、data_partner_api_keys、data_partner_api_usage_logsは
 -- いずれもadmin(service role)経由のみで読み書きする想定のため、クライアント向けのポリシーは
 -- あえて設けない（担当者確認済みの審査フローを経てのみ、サーバー側から操作する）。

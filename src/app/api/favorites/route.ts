@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { getAuthenticatedUserId } from "@/lib/auth";
 import { favoriteSchema } from "@/lib/schemas";
+import { awardPoints } from "@/lib/points";
 
 export async function POST(request: NextRequest) {
   const userId = await getAuthenticatedUserId(request);
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: "お気に入りの登録に失敗しました。" }, { status: 502 });
   }
+  await awardPoints(supabase, userId, "favorite_added", parsed.data.workId);
   return NextResponse.json({ ok: true });
 }
 

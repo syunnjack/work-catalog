@@ -215,6 +215,16 @@ export interface MakerSubmission {
   created_at: string;
 }
 
+// ユーザーポイント(将来の会員特典の下地)。加算専用の台帳で、残高はSUM(points)で算出する。
+export interface PointTransaction {
+  id: number;
+  user_id: string;
+  points: number;
+  reason: "favorite_added" | "comment_posted" | "price_watch_registered" | "notification_registered";
+  reference_id: string | null;
+  created_at: string;
+}
+
 // 新作発売日通知の登録。メーカー/レーベル/シリーズのいずれか1つにのみ紐づく。
 export interface NotificationSubscription {
   id: string;

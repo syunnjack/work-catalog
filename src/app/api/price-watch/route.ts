@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { getAuthenticatedUserId } from "@/lib/auth";
 import { priceWatchSchema } from "@/lib/schemas";
+import { awardPoints } from "@/lib/points";
 
 // 中古相場(第二の核)の価格変動通知登録。再訪問導線として使う。
 export async function POST(request: NextRequest) {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: "価格通知の登録に失敗しました。" }, { status: 502 });
   }
+  await awardPoints(supabase, userId, "price_watch_registered", parsed.data.workId);
   return NextResponse.json({ ok: true });
 }
 

@@ -10,14 +10,19 @@ export default function AuthNav() {
 
   if (session) {
     return (
-      <button
-        type="button"
-        onClick={() => signOut()}
-        className="shrink-0 rounded-full px-2.5 py-1.5 text-gray-300 hover:bg-neutral-800"
-        title={session.user.email ?? ""}
-      >
-        ログアウト
-      </button>
+      <>
+        <Link href="/mypage" className="shrink-0 rounded-full px-2.5 py-1.5 text-neutral-300 hover:bg-neutral-800">
+          マイページ
+        </Link>
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="shrink-0 rounded-full px-2.5 py-1.5 text-gray-300 hover:bg-neutral-800"
+          title={session.user.email ?? ""}
+        >
+          ログアウト
+        </button>
+      </>
     );
   }
 

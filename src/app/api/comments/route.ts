@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { getAuthenticatedUserId } from "@/lib/auth";
 import { commentSchema } from "@/lib/schemas";
+import { awardPoints } from "@/lib/points";
 
 export async function GET(request: NextRequest) {
   const workId = request.nextUrl.searchParams.get("workId");
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: "コメントの投稿に失敗しました。" }, { status: 502 });
+  }
+  if (userId) {
+    await awardPoints(supabase, userId, "comment_posted", parsed.data.workId);
   }
   return NextResponse.json({ ok: true });
 }
