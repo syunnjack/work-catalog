@@ -32,3 +32,11 @@ export const priceWatchSchema = z.object({
   workId: z.string().min(1),
   notifyBelowPriceYen: z.number().positive().optional(),
 });
+
+// /admin(メーカー提出情報レビュー画面)での審査結果。ここではmaker_submissions.statusの
+// 更新のみを扱う。承認内容をworks/work_actress/aliasesへ反映する作業は運営者が別途手動で行う
+// (docs/architecture.md「メーカー公式提出チャネル」参照)。
+export const makerSubmissionReviewSchema = z.object({
+  status: z.enum(["approved", "rejected"]),
+  reviewNote: z.string().max(1000).optional(),
+});
