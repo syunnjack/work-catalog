@@ -27,6 +27,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/used-market`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/used-market/ranking`, changeFrequency: "daily", priority: 0.7 },
     { url: `${baseUrl}/topics`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${baseUrl}/guides/payments`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${baseUrl}/guides/payments/china`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${baseUrl}/guides/payments/taiwan`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${baseUrl}/guides/payments/korea`, changeFrequency: "monthly", priority: 0.4 },
   ];
 
   for (const topic of TOPICS) entries.push({ url: `${baseUrl}/topics/${topic.slug}`, changeFrequency: "weekly", priority: 0.6 });
