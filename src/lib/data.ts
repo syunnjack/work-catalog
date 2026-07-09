@@ -516,12 +516,58 @@ export async function getActressBySlug(slug: string): Promise<ActressWithWorks |
 
 // ---- ランキング(作品・メーカー・レーベル単位。女優個人の人気ランキングは設けない) ----
 
-export async function getWorkRanking(limit = 20): Promise<Work[]> {
+export type WorkRankingMetric = "views" | "clicks" | "ctr";
+
+// /go/[id]がwork_distribution_link_id基準で記録したクリックログをwork単位に集計する。
+// 実際のクリック数はまだ少量の想定のため、DB側の集計関数は用意せずアプリ側で集計する。
+async function getWorkClickCounts(supabase: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from("affiliate_click_logs")
+    .select("work_distribution_links(work_id)")
+    .not("work_distribution_link_id", "is", null);
+  if (error) throw error;
+
+  type Row = { work_distribution_links: { work_id: string } | null };
+  const counts = new Map<string, number>();
+  for (const row of (data ?? []) as unknown as Row[]) {
+    const workId = row.work_distribution_links?.work_id;
+    if (!workId) continue;
+    counts.set(workId, (counts.get(workId) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export async function getWorkRanking(limit = 20, metric: WorkRankingMetric = "views"): Promise<Work[]> {
   return withFallback(
     async (supabase) => {
-      const { data, error } = await supabase.from("works").select("*").order("view_count", { ascending: false }).limit(limit);
+      if (metric === "views") {
+        const { data, error } = await supabase.from("works").select("*").order("view_count", { ascending: false }).limit(limit);
+        if (error) throw error;
+        return (data ?? []) as Work[];
+      }
+
+      const clickCounts = await getWorkClickCounts(supabase);
+
+      if (metric === "clicks") {
+        const topIds = [...clickCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id);
+        if (topIds.length === 0) return [];
+        const { data, error } = await supabase.from("works").select("*").in("id", topIds);
+        if (error) throw error;
+        const byId = new Map(((data ?? []) as Work[]).map((w) => [w.id, w]));
+        return topIds.map((id) => byId.get(id)).filter((w): w is Work => Boolean(w));
+      }
+
+      // ctr: 閲覧数0件はゼロ除算になるため対象から外す。
+      const candidateIds = [...clickCounts.keys()];
+      if (candidateIds.length === 0) return [];
+      const { data, error } = await supabase.from("works").select("*").in("id", candidateIds);
       if (error) throw error;
-      return (data ?? []) as Work[];
+      return ((data ?? []) as Work[])
+        .filter((w) => w.view_count > 0)
+        .map((w) => ({ work: w, ctr: (clickCounts.get(w.id) ?? 0) / w.view_count }))
+        .sort((a, b) => b.ctr - a.ctr)
+        .slice(0, limit)
+        .map((s) => s.work);
     },
     () => [...mock.mockWorks].sort((a, b) => b.view_count - a.view_count).slice(0, limit)
   );

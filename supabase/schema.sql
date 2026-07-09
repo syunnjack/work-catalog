@@ -237,15 +237,22 @@ create table public.work_distribution_links (
   unique (work_id, platform_id, platform_product_code)
 );
 
+-- affiliate_link_idはASP提携リンク経由の場合のみ設定する。sync-dmm/sync-duga等の
+-- カタログ取り込みはaffiliate_linksを作らないため、大半のクリックはwork_distribution_link_id
+-- 経由でしか追跡できない。ランキングのクリック数/CTR算出はwork_distribution_link_id基準で行う。
 create table public.affiliate_click_logs (
   id bigint generated always as identity primary key,
-  affiliate_link_id uuid not null references public.affiliate_links(id) on delete cascade,
+  affiliate_link_id uuid references public.affiliate_links(id) on delete cascade,
+  work_distribution_link_id uuid references public.work_distribution_links(id) on delete cascade,
   user_id uuid references public.users(id) on delete set null,
   referer_path text,
   ip_hash text,
   user_agent text,
-  clicked_at timestamptz not null default now()
+  clicked_at timestamptz not null default now(),
+  constraint affiliate_click_logs_has_target check (affiliate_link_id is not null or work_distribution_link_id is not null)
 );
+
+create index affiliate_click_logs_work_distribution_link_idx on public.affiliate_click_logs (work_distribution_link_id);
 
 create table public.affiliate_conversions (
   id bigint generated always as identity primary key,

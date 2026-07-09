@@ -14,15 +14,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const { data: link } = await supabase.from("work_distribution_links").select("*").eq("id", id).maybeSingle();
     if (link?.platform_work_url) {
       destinationUrl = link.platform_work_url as string;
-      // affiliate_click_logs.affiliate_link_idはnot nullのため、提携リンクが未設定の
-      // (公式参照リンクのみの)work_distribution_linksではクリックログを記録しない。
-      if (link.affiliate_link_id) {
-        await supabase.from("affiliate_click_logs").insert({
-          affiliate_link_id: link.affiliate_link_id,
-          referer_path: request.headers.get("referer"),
-          user_agent: request.headers.get("user-agent"),
-        });
-      }
+      // work_distribution_link_id基準で常に記録する(ランキングのクリック数/CTR算出に使う)。
+      // affiliate_link_idはASP提携リンクがある場合のみ併記する(成果計測用)。
+      await supabase.from("affiliate_click_logs").insert({
+        affiliate_link_id: link.affiliate_link_id ?? null,
+        work_distribution_link_id: link.id,
+        referer_path: request.headers.get("referer"),
+        user_agent: request.headers.get("user-agent"),
+      });
     }
   } catch {
     const mockLink = mockWorkDistributionLinks.find((l) => l.id === id);
