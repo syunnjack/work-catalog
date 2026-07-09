@@ -2,6 +2,7 @@ import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WorkCard from "@/components/WorkCard";
 import { getWorkRanking, type WorkRankingMetric } from "@/lib/data";
+import { GENRE_CATEGORIES, GENRE_CATEGORY_LABELS } from "@/lib/genre-categories";
 import { buildMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
@@ -40,6 +41,21 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
             {tab.label}
           </Link>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-sm font-bold text-neutral-300">ジャンル別ランキング</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {GENRE_CATEGORIES.map((category) => (
+            <Link
+              key={category}
+              href={`/ranking/${category}`}
+              className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:border-neutral-400"
+            >
+              {GENRE_CATEGORY_LABELS[category]}ランキング
+            </Link>
+          ))}
+        </div>
       </div>
 
       <ol className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5">

@@ -4,6 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import * as mock from "@/lib/mock-data";
+import { categorizeGenreName, type GenreCategory } from "@/lib/genre-categories";
 import type {
   Actress,
   ActressWithWorks,
@@ -510,6 +511,35 @@ export async function getActressBySlug(slug: string): Promise<ActressWithWorks |
         })
         .filter((v): v is { work: Work; credit_name: string } => Boolean(v));
       return { ...actress, aliases, works };
+    }
+  );
+}
+
+// ---- ジャンルカテゴリ(シチュエーション/フェチ/コスプレ)別ランキング ----
+// genresテーブル自体は変更せず、lib/genre-categories.tsのキーワードでコード側だけ束ねる。
+
+export async function getGenresByCategory(category: GenreCategory): Promise<Genre[]> {
+  const genres = await getGenres();
+  return genres.filter((g) => categorizeGenreName(g.name) === category);
+}
+
+export async function getWorkRankingByCategory(category: GenreCategory, limit = 30): Promise<Work[]> {
+  const genreIds = (await getGenresByCategory(category)).map((g) => g.id);
+  if (genreIds.length === 0) return [];
+
+  return withFallback(
+    async (supabase) => {
+      const { data, error } = await supabase.from("work_genres").select("work_id, works(*)").in("genre_id", genreIds);
+      if (error) throw error;
+      type Row = { works: Work | null };
+      const works = ((data ?? []) as unknown as Row[]).map((row) => row.works).filter((w): w is Work => Boolean(w));
+      const uniqueById = new Map(works.map((w) => [w.id, w]));
+      return [...uniqueById.values()].sort((a, b) => b.view_count - a.view_count).slice(0, limit);
+    },
+    () => {
+      const genreIdSet = new Set(genreIds);
+      const workIds = new Set(mock.mockWorkGenres.filter((wg) => genreIdSet.has(wg.genre_id)).map((wg) => wg.work_id));
+      return [...mock.mockWorks].filter((w) => workIds.has(w.id)).sort((a, b) => b.view_count - a.view_count).slice(0, limit);
     }
   );
 }
