@@ -269,6 +269,30 @@ export interface NotificationSubscription {
   created_at: string;
 }
 
+// 第三の核: 法人向けデータ/APIサービスの契約先マスタ(docs/collector-data-services.md)。
+export interface DataPartner {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  contact_email: string;
+  plan: "starter" | "pro" | "enterprise";
+  review_status: "pending" | "approved" | "rejected" | "suspended";
+  contract_started_on: string | null;
+  contract_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DataPartnerApiKey {
+  id: string;
+  partner_id: string;
+  key_hash: string;
+  scopes: string[];
+  status: "active" | "revoked";
+  created_at: string;
+  revoked_at: string | null;
+}
+
 // 画面表示用に関連エンティティを合成した型。
 export interface WorkWithRelations extends Work {
   maker: Maker | null;

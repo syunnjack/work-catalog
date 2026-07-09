@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import type { MakerSubmission, WorkMarketPriceReport } from "@/types/database";
 
@@ -112,7 +113,10 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-white">メーカー提出情報レビュー</h1>
+      <Link href="/admin/data-partners" className="text-xs text-neutral-500 hover:underline">
+        法人向けデータ/APIサービス契約先管理 →
+      </Link>
+      <h1 className="mt-2 text-xl font-bold text-white">メーカー提出情報レビュー</h1>
       <p className="mt-1 text-xs text-neutral-500">
         審査待ちの提出のみを表示します。承認後、works/出演者クレジット等への反映は内容を確認した上で別途手動で行ってください。
       </p>

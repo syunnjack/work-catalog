@@ -70,6 +70,23 @@ export const notificationSubscriptionSchema = z
     message: "makerId, labelId, seriesIdのいずれか1つだけを指定してください。",
   });
 
+// 第三の核: 法人向けデータ/APIサービスの契約先登録(/admin)。
+// 用途審査はシステム外(本人確認・ヒアリング)で行い、その結果をここで記録する。
+export const dataPartnerSchema = z.object({
+  companyName: z.string().min(1, "会社名を入力してください。"),
+  contactName: z.string().min(1, "担当者名を入力してください。"),
+  contactEmail: z.string().email("メールアドレスの形式が不正です。"),
+  plan: z.enum(["starter", "pro", "enterprise"]),
+  reviewStatus: z.enum(["pending", "approved", "rejected", "suspended"]),
+  contractNote: z.string().max(2000).optional(),
+});
+
+// APIキー発行。scopesは'catalog_read' | 'used_market_read'を想定するが、
+// 将来の拡張に備えて文字列配列として受け取る。
+export const dataPartnerApiKeyIssueSchema = z.object({
+  scopes: z.array(z.string().min(1)).min(1, "スコープを1つ以上指定してください。"),
+});
+
 // /admin(メーカー提出情報レビュー画面)での審査結果。ここではmaker_submissions.statusの
 // 更新のみを扱う。承認内容をworks/work_actress/aliasesへ反映する作業は運営者が別途手動で行う
 // (docs/architecture.md「メーカー公式提出チャネル」参照)。
