@@ -39,7 +39,11 @@ export default function WorkThumbnail({
   }, []);
 
   if (unavailable) {
-    return placeholderClassName ? <div className={placeholderClassName} aria-hidden /> : null;
+    return (
+      <div className={`${placeholderClassName ?? "aspect-video w-full rounded bg-neutral-800"} flex items-center justify-center`}>
+        <span className="text-xs text-neutral-500">近日公開</span>
+      </div>
+    );
   }
 
   return (

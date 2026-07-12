@@ -90,6 +90,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
           src={work.permitted_thumbnail_url}
           alt={work.title}
           className="mt-3 w-full max-w-md rounded-lg border border-neutral-800"
+          placeholderClassName="mt-3 aspect-video w-full max-w-md rounded-lg border border-neutral-800 bg-neutral-900"
         />
       )}
       <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
