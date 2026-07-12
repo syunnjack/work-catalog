@@ -785,13 +785,16 @@ export async function search(query: string): Promise<SearchResult> {
         supabase.from("labels").select("*").ilike("name", like).limit(20),
         supabase.from("series").select("*").ilike("name", like).limit(20),
       ]);
-      return {
+      const result = {
         works: (worksRes.data ?? []) as Work[],
         actresses: (actressesRes.data ?? []) as Actress[],
         makers: (makersRes.data ?? []) as Maker[],
         labels: (labelsRes.data ?? []) as Label[],
         series: (seriesRes.data ?? []) as Series[],
       };
+      const resultCount = result.works.length + result.actresses.length + result.makers.length + result.labels.length + result.series.length;
+      await supabase.from("search_logs").insert({ query: q, search_type: "all", result_count: resultCount });
+      return result;
     },
     () => {
       const lower = q.toLowerCase();

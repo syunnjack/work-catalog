@@ -11,6 +11,7 @@ import PriceWatchButton from "@/components/PriceWatchButton";
 import StarRating from "@/components/StarRating";
 import WorkThumbnail from "@/components/WorkThumbnail";
 import ShareButtons from "@/components/ShareButtons";
+import ViewTracker from "@/components/ViewTracker";
 import MarketPriceReportForm from "@/components/MarketPriceReportForm";
 import CommentSection from "@/components/CommentSection";
 import { getUsedMarketPlatforms, getWorkBySlug } from "@/lib/data";
@@ -79,6 +80,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <JsonLd data={jsonLd} />
+      <ViewTracker slug={work.slug} />
       <Breadcrumbs
         items={[
           { name: "トップ", href: "/" },
