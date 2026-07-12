@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import ShareButtons from "@/components/ShareButtons";
 import type { PointTransaction } from "@/types/database";
 
 const REASON_LABEL: Record<PointTransaction["reason"], string> = {
@@ -98,7 +99,9 @@ export default function MyPage() {
 
       <div className="mt-6 rounded-lg border border-neutral-800 bg-neutral-900 p-4">
         <p className="text-xs font-bold text-neutral-300">お気に入りリストの公開</p>
-        <p className="mt-1 text-xs text-neutral-500">公開すると、URLを知っている人がお気に入り作品一覧を見られるようになります。</p>
+        <p className="mt-1 text-xs text-neutral-500">
+          自分だけの推し作品リストを友達やSNSでシェアできます。公開すると、URLを知っている人がお気に入り作品一覧を見られるようになります。
+        </p>
 
         {sharing === null ? (
           <p className="mt-3 text-xs text-neutral-500">読み込み中...</p>
@@ -152,6 +155,11 @@ export default function MyPage() {
                 >
                   {copied ? "コピーしました" : "コピー"}
                 </button>
+              </div>
+            )}
+            {sharing.favorites_public && shareUrl && (
+              <div className="mt-2">
+                <ShareButtons url={shareUrl} title="お気に入りリストを公開しました" />
               </div>
             )}
           </>

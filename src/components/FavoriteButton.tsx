@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -52,18 +53,25 @@ export default function FavoriteButton({ workId }: { workId: string }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={loading || busy}
-      aria-pressed={favorited}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-        favorited
-          ? "border-rose-500 bg-rose-500/10 text-rose-300"
-          : "border-neutral-700 text-neutral-300 hover:border-neutral-400"
-      }`}
-    >
-      {favorited ? "♥ お気に入り済み" : "♡ お気に入りに追加"}
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={loading || busy}
+        aria-pressed={favorited}
+        className={`rounded-full border px-4 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+          favorited
+            ? "border-rose-500 bg-rose-500/10 text-rose-300"
+            : "border-neutral-700 text-neutral-300 hover:border-neutral-400"
+        }`}
+      >
+        {favorited ? "♥ お気に入り済み" : "♡ お気に入りに追加"}
+      </button>
+      {favorited && (
+        <Link href="/mypage" className="text-xs text-neutral-500 underline hover:text-neutral-300">
+          リストを公開してシェア →
+        </Link>
+      )}
+    </div>
   );
 }
