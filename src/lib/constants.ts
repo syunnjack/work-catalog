@@ -1,4 +1,4 @@
-export const SITE_NAME = "work-catalog";
+export const SITE_NAME = "AV名鑑";
 
 export const SITE_DESCRIPTION =
   "品番・作品名・メーカー・レーベル・シリーズから探せる作品カタログ。公式クレジットの出演者情報と、廃盤・希少タイトルの中古相場をあわせて確認できます。";
