@@ -9,6 +9,7 @@ import DisclosureNotice from "@/components/DisclosureNotice";
 import FavoriteButton from "@/components/FavoriteButton";
 import PriceWatchButton from "@/components/PriceWatchButton";
 import StarRating from "@/components/StarRating";
+import WorkThumbnail from "@/components/WorkThumbnail";
 import MarketPriceReportForm from "@/components/MarketPriceReportForm";
 import CommentSection from "@/components/CommentSection";
 import { getUsedMarketPlatforms, getWorkBySlug } from "@/lib/data";
@@ -85,8 +86,7 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
       />
 
       {work.permitted_thumbnail_url && (
-        // eslint-disable-next-line @next/next/no-img-element -- 許諾済み外部画像(DMM等)をそのまま表示する
-        <img
+        <WorkThumbnail
           src={work.permitted_thumbnail_url}
           alt={work.title}
           className="mt-3 w-full max-w-md rounded-lg border border-neutral-800"

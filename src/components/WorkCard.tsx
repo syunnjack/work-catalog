@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Work } from "@/types/database";
+import WorkThumbnail from "./WorkThumbnail";
 
 export default function WorkCard({ work }: { work: Work }) {
   return (
@@ -8,12 +9,11 @@ export default function WorkCard({ work }: { work: Work }) {
       className="block rounded-lg border border-neutral-800 bg-neutral-900 p-3 transition hover:border-neutral-600"
     >
       {work.permitted_thumbnail_url ? (
-        // eslint-disable-next-line @next/next/no-img-element -- 許諾済み外部画像(DMM等)をそのまま表示する
-        <img
+        <WorkThumbnail
           src={work.permitted_thumbnail_url}
           alt={work.title}
-          loading="lazy"
           className="aspect-video w-full rounded bg-neutral-800 object-cover"
+          placeholderClassName="aspect-video w-full rounded bg-neutral-800"
         />
       ) : (
         <div className="aspect-video w-full rounded bg-neutral-800" aria-hidden />
