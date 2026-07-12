@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import JsonLd from "@/components/JsonLd";
 import WorkCard from "@/components/WorkCard";
 import { getPlatformBySlug, getWorksByPlatform } from "@/lib/data";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, organizationJsonLd } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -23,11 +25,25 @@ export default async function PlatformDetailPage({ params }: { params: Promise<{
   if (!platform) notFound();
 
   const works = await getWorksByPlatform(platform.id, 24);
+  const baseUrl = resolveBaseUrl();
+  const pageUrl = `${baseUrl}/platforms/${platform.slug}`;
+  const answerBlock = `${platform.name}で配信/販売中の作品一覧です。`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <JsonLd
+        data={[
+          organizationJsonLd({ name: platform.name, url: platform.website_url ?? pageUrl, description: platform.notes ?? undefined }),
+          breadcrumbJsonLd([
+            { name: "トップ", url: baseUrl },
+            { name: "配信サイト一覧", url: `${baseUrl}/platforms` },
+            { name: platform.name, url: pageUrl },
+          ]),
+        ]}
+      />
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "配信サイト一覧", href: "/platforms" }, { name: platform.name, href: `/platforms/${platform.slug}` }]} />
       <h1 className="mt-3 text-xl font-bold text-white">{platform.name}</h1>
+      <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
       {platform.operator_name && <p className="mt-1 text-sm text-neutral-400">運営: {platform.operator_name}</p>}
       {platform.notes && <p className="mt-2 text-sm text-neutral-400">{platform.notes}</p>}
       {platform.website_url && (

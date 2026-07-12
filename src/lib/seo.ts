@@ -11,6 +11,7 @@ export function buildMetadata(params: { title: string; description: string; path
     description: params.description,
     alternates: { canonical: url },
     openGraph: { title, description: params.description, url, locale: "ja_JP", type: "website" },
+    twitter: { card: "summary_large_image", title, description: params.description },
   };
 }
 
@@ -23,6 +24,15 @@ export function breadcrumbJsonLd(items: Array<{ name: string; url: string }>) {
       name: item.name,
       item: item.url,
     })),
+  };
+}
+
+export function organizationJsonLd(params: { name: string; url: string; description?: string }) {
+  return {
+    "@type": "Organization",
+    name: params.name,
+    url: params.url,
+    description: params.description || undefined,
   };
 }
 

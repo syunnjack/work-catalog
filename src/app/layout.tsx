@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     type: "website",
   },
+  twitter: { card: "summary_large_image", title: HOME_TITLE, description: SITE_DESCRIPTION },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import JsonLd from "@/components/JsonLd";
 import WorkCard from "@/components/WorkCard";
 import NotifyButton from "@/components/NotifyButton";
 import { getLabels, getMakers, getSeriesBySlug, getWorksBySeries } from "@/lib/data";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -27,9 +29,18 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ s
   const [labels, makers, works] = await Promise.all([getLabels(), getMakers(), getWorksBySeries(series.id, 24)]);
   const label = labels.find((l) => l.id === series.label_id);
   const maker = makers.find((m) => m.id === series.maker_id);
+  const baseUrl = resolveBaseUrl();
+  const answerBlock = `${series.name}の作品一覧と新着情報を確認できます。`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "トップ", url: baseUrl },
+          { name: "シリーズ一覧", url: `${baseUrl}/series` },
+          { name: series.name, url: `${baseUrl}/series/${series.slug}` },
+        ])}
+      />
       <Breadcrumbs
         items={[
           { name: "トップ", href: "/" },
@@ -46,6 +57,7 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ s
         {maker && label && " / "}
         {label && <Link href={`/labels/${label.slug}`} className="text-neutral-100 hover:underline">{label.name}</Link>}
       </p>
+      <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
       {series.description && <p className="mt-2 text-sm text-neutral-400">{series.description}</p>}
 
       <h2 className="mt-8 text-base font-bold text-neutral-100">作品一覧</h2>

@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import JsonLd from "@/components/JsonLd";
 import WorkCard from "@/components/WorkCard";
 import NotifyButton from "@/components/NotifyButton";
 import { getLabelBySlug, getMakers, getSeriesList, getWorksByLabel } from "@/lib/data";
-import { buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, organizationJsonLd } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -27,9 +29,22 @@ export default async function LabelDetailPage({ params }: { params: Promise<{ sl
   const [makers, allSeries, works] = await Promise.all([getMakers(), getSeriesList(), getWorksByLabel(label.id, 24)]);
   const maker = makers.find((m) => m.id === label.maker_id);
   const seriesUnderLabel = allSeries.filter((s) => s.label_id === label.id);
+  const baseUrl = resolveBaseUrl();
+  const pageUrl = `${baseUrl}/labels/${label.slug}`;
+  const answerBlock = `${label.name}の人気作品、新着作品、関連シリーズを確認できます。`;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <JsonLd
+        data={[
+          organizationJsonLd({ name: label.name, url: pageUrl, description: label.description ?? undefined }),
+          breadcrumbJsonLd([
+            { name: "トップ", url: baseUrl },
+            { name: "レーベル一覧", url: `${baseUrl}/labels` },
+            { name: label.name, url: pageUrl },
+          ]),
+        ]}
+      />
       <Breadcrumbs
         items={[
           { name: "トップ", href: "/" },
@@ -41,6 +56,7 @@ export default async function LabelDetailPage({ params }: { params: Promise<{ sl
         <h1 className="text-xl font-bold text-white">{label.name}</h1>
         <NotifyButton labelId={label.id} />
       </div>
+      <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
       {maker && (
         <p className="mt-1 text-sm text-neutral-400">
           メーカー: <Link href={`/makers/${maker.slug}`} className="text-neutral-100 hover:underline">{maker.name}</Link>

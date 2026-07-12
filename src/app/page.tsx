@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Section from "@/components/Section";
 import WorkCard from "@/components/WorkCard";
+import JsonLd from "@/components/JsonLd";
 import { getMakers, getPremiumWorkRanking, getWorkRanking, getWorks } from "@/lib/data";
+import { resolveBaseUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 
 // venue系サイトと同様、随時増えるデータを毎回問い合わせるのは遅延要因になるため5分キャッシュする。
 export const revalidate = 300;
@@ -14,8 +16,31 @@ export default async function Home() {
     getPremiumWorkRanking(4),
   ]);
 
+  const baseUrl = resolveBaseUrl();
+
   return (
     <div className="mx-auto max-w-6xl px-4">
+      <JsonLd
+        data={[
+          {
+            "@type": "WebSite",
+            name: SITE_NAME,
+            url: baseUrl,
+            description: SITE_DESCRIPTION,
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${baseUrl}/search?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
+          },
+          {
+            "@type": "Organization",
+            name: SITE_NAME,
+            url: baseUrl,
+            description: SITE_DESCRIPTION,
+          },
+        ]}
+      />
       <section className="py-10 text-center">
         <h1 className="text-2xl font-bold text-white sm:text-3xl">品番・作品名・メーカー・レーベルから探す</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm text-neutral-400">
