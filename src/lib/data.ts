@@ -109,6 +109,43 @@ export async function getMakerBySlug(slug: string): Promise<Maker | null> {
   );
 }
 
+export interface LabelWorkCount {
+  label: Label;
+  workCount: number;
+}
+
+// topics(コラム)向け。labelsテーブルにwork countを持たないため、works側から集計する。
+export async function getLabelWorkCounts(limit = 20): Promise<LabelWorkCount[]> {
+  return withFallback(
+    async (supabase) => {
+      const [{ data: labels }, { data: works }] = await Promise.all([
+        supabase.from("labels").select("*"),
+        supabase.from("works").select("label_id"),
+      ]);
+      const counts = new Map<string, number>();
+      for (const work of (works ?? []) as Array<{ label_id: string | null }>) {
+        if (!work.label_id) continue;
+        counts.set(work.label_id, (counts.get(work.label_id) ?? 0) + 1);
+      }
+      return ((labels ?? []) as Label[])
+        .map((label) => ({ label, workCount: counts.get(label.id) ?? 0 }))
+        .sort((a, b) => b.workCount - a.workCount)
+        .slice(0, limit);
+    },
+    () => {
+      const counts = new Map<string, number>();
+      for (const work of mock.mockWorks) {
+        if (!work.label_id) continue;
+        counts.set(work.label_id, (counts.get(work.label_id) ?? 0) + 1);
+      }
+      return mock.mockLabels
+        .map((label) => ({ label, workCount: counts.get(label.id) ?? 0 }))
+        .sort((a, b) => b.workCount - a.workCount)
+        .slice(0, limit);
+    }
+  );
+}
+
 // ---- Labels ----
 
 export async function getLabels(): Promise<Label[]> {

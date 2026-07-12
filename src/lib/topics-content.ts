@@ -35,4 +35,14 @@ export const TOPICS: TopicDefinition[] = [
     title: "作品数が多いメーカーランキング",
     description: "カタログに登録されている作品数が多い順のメーカーランキング。",
   },
+  {
+    slug: "prolific-labels",
+    title: "作品数が多いレーベルランキング",
+    description: "カタログに登録されている作品数が多い順のレーベルランキング。",
+  },
+  {
+    slug: "top-rated",
+    title: "ユーザー評価が高い作品ランキング",
+    description: "ユーザーの星評価の平均が高い作品ランキング。",
+  },
 ];
