@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ShareButtons from "@/components/ShareButtons";
 import { getMakerWorkCounts } from "@/lib/data";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -23,7 +25,10 @@ export default async function ProlificMakersTopicPage() {
           { name: "作品数が多いメーカーランキング", href: "/topics/prolific-makers" },
         ]}
       />
-      <h1 className="mt-3 text-xl font-bold text-white">作品数が多いメーカーランキング</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">作品数が多いメーカーランキング</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/topics/prolific-makers`} title="作品数が多いメーカーランキング" />
+      </div>
       <p className="mt-2 text-sm text-neutral-400">カタログに登録されている作品数が多い順に並べています。</p>
 
       <ol className="mt-6 divide-y divide-neutral-800 rounded-lg border border-neutral-800 bg-neutral-900">

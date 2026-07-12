@@ -10,6 +10,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import PriceWatchButton from "@/components/PriceWatchButton";
 import StarRating from "@/components/StarRating";
 import WorkThumbnail from "@/components/WorkThumbnail";
+import ShareButtons from "@/components/ShareButtons";
 import MarketPriceReportForm from "@/components/MarketPriceReportForm";
 import CommentSection from "@/components/CommentSection";
 import { getUsedMarketPlatforms, getWorkBySlug } from "@/lib/data";
@@ -100,8 +101,9 @@ export default async function WorkDetailPage({ params }: { params: Promise<{ slu
       </div>
       <p className="mt-1 text-sm text-neutral-400">{answerBlock}</p>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <StarRating workId={work.id} ratingAvg={work.rating_avg} ratingCount={work.rating_count} />
+        <ShareButtons url={pageUrl} title={`${work.title}（${work.product_code}）`} />
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-sm sm:grid-cols-3">

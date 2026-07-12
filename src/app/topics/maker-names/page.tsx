@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ShareButtons from "@/components/ShareButtons";
 import { CURATED_MAKER_NAMES } from "@/lib/topics-content";
 import { getMakersByNames } from "@/lib/data";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -25,7 +27,10 @@ export default async function MakerNamesTopicPage() {
           { name: "メーカー名選手権", href: "/topics/maker-names" },
         ]}
       />
-      <h1 className="mt-3 text-xl font-bold text-white">聞いたら二度見するメーカー名選手権</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">聞いたら二度見するメーカー名選手権</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/topics/maker-names`} title="聞いたら二度見するメーカー名選手権" />
+      </div>
       <p className="mt-2 text-sm text-neutral-400">
         作品カタログを整理していて、思わず二度見してしまったメーカー名を集めました。すべて実在する公式のメーカー名です。
       </p>

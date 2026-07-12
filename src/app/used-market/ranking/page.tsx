@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ShareButtons from "@/components/ShareButtons";
 import { getPremiumWorkRanking } from "@/lib/data";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -17,7 +19,10 @@ export default async function UsedMarketRankingPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "中古相場", href: "/used-market" }, { name: "プレミア価格ランキング", href: "/used-market/ranking" }]} />
-      <h1 className="mt-3 text-xl font-bold text-white">プレミア価格ランキング</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">プレミア価格ランキング</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/used-market/ranking`} title="プレミア価格ランキング" />
+      </div>
       <p className="mt-2 text-sm text-neutral-400">
         中古相場の参考価格が高い順に並べています。相場は変動するため、最終確認は各プラットフォームでお願いします。
       </p>

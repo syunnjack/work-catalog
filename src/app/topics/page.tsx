@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ShareButtons from "@/components/ShareButtons";
 import { TOPICS } from "@/lib/topics-content";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -15,7 +17,10 @@ export default function TopicsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "コラム・ランキング", href: "/topics" }]} />
-      <h1 className="mt-3 text-xl font-bold text-white">コラム・ランキング</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">コラム・ランキング</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/topics`} title="コラム・ランキング" />
+      </div>
       <p className="mt-2 text-sm text-neutral-400">作品カタログのデータから見つけた、ちょっと面白い雑学・ランキングです。</p>
 
       <div className="mt-6 flex flex-col gap-3">

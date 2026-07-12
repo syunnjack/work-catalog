@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WorkCard from "@/components/WorkCard";
+import ShareButtons from "@/components/ShareButtons";
 import { getWorkRankingByCategory } from "@/lib/data";
 import { GENRE_CATEGORIES, GENRE_CATEGORY_LABELS, isGenreCategory } from "@/lib/genre-categories";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -32,7 +34,10 @@ export default async function GenreCategoryRankingPage({ params }: { params: Pro
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "ランキング", href: "/ranking" }, { name: `${label}ランキング`, href: `/ranking/${category}` }]} />
-      <h1 className="mt-3 text-xl font-bold text-white">{label}ランキング</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">{label}ランキング</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/ranking/${category}`} title={`${label}ランキング`} />
+      </div>
       <p className="mt-1 text-xs text-neutral-500">
         {label}系ジャンルが付いた作品を閲覧数の多い順に並べています。ジャンルの分類は編集上のものであり、メーカー/レーベルの公式区分とは異なる場合があります。
       </p>

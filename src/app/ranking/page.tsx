@@ -1,9 +1,11 @@
 import Link from "next/link";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import WorkCard from "@/components/WorkCard";
+import ShareButtons from "@/components/ShareButtons";
 import { getWorkRanking, type WorkRankingMetric } from "@/lib/data";
 import { GENRE_CATEGORIES, GENRE_CATEGORY_LABELS } from "@/lib/genre-categories";
 import { buildMetadata } from "@/lib/seo";
+import { resolveBaseUrl } from "@/lib/constants";
 
 export const revalidate = 300;
 
@@ -25,7 +27,10 @@ export default async function RankingPage({ searchParams }: { searchParams: Prom
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Breadcrumbs items={[{ name: "トップ", href: "/" }, { name: "ランキング", href: "/ranking" }]} />
-      <h1 className="mt-3 text-xl font-bold text-white">作品ランキング</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-xl font-bold text-white">作品ランキング</h1>
+        <ShareButtons url={`${resolveBaseUrl()}/ranking${metric === "views" ? "" : `?metric=${metric}`}`} title="作品ランキング" />
+      </div>
       <p className="mt-1 text-xs text-neutral-500">{activeTab.description}女優個人のランキングは設けていません。</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
